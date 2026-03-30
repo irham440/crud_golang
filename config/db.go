@@ -1,11 +1,11 @@
 package config
 
 import (
+	"fmt"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
-	"fmt"
-	"github.com/joho/godotenv"
 )
 
 func ConnectDB() *gorm.DB {
