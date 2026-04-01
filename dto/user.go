@@ -12,9 +12,9 @@ type getprofileResponse struct {
 }
 
 type CreateUserRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string  `json:"name" validate:"required,min=3"`
+	Email    string  `json:"email" validate:"required,email"`
+	Password string  `json:"password" validate:"required,min=8,alphanum,contains="`
 }
 
 type createUserResponse struct {
@@ -25,11 +25,10 @@ type createUserResponse struct {
 }
 
 type TopUpSaldoRequest struct {
-	Id     int     `json:"id"`
-	Amount float64 `json:"amount"`
+	Amount float64 `json:"amount" validate:"required,gt=0"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,alphanum,contains=1"`
 }

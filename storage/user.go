@@ -25,7 +25,7 @@ func NewPostgresRepo(db *gorm.DB) *PostgresRepo {
 
 func (p *PostgresRepo) GetById(ctx context.Context, id int) (*models.User, error) {
 	var user models.User
-	err := p.db.First(&user, id).Error
+	err := p.db.WithContext(ctx).First(&user, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (p *PostgresRepo) GetById(ctx context.Context, id int) (*models.User, error
 }
 
 func (p *PostgresRepo) Save(ctx context.Context, user *models.User) error {
-	err := p.db.Create(user).Error
+	err := p.db.WithContext(ctx).Create(user).Error
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (p *PostgresRepo) Save(ctx context.Context, user *models.User) error {
 
 func (p *PostgresRepo) GetEmail(ctx context.Context, email string) (string, error) {
 	var foundEmail string
-	err := p.db.Model(models.User{}).Select("email").Where("email = ?", email).First(&foundEmail).Error
+	err := p.db.WithContext(ctx).Model(models.User{}).Select("email").Where("email = ?", email).First(&foundEmail).Error
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +50,7 @@ func (p *PostgresRepo) GetEmail(ctx context.Context, email string) (string, erro
 }
 
 func (p *PostgresRepo) Update(ctx context.Context, user *models.User) error {
-	err := p.db.Save(user).Error
+	err := p.db.WithContext(ctx).Save(user).Error
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (p *PostgresRepo) Update(ctx context.Context, user *models.User) error {
 }
 
 func (p *PostgresRepo) AddSaldo(ctx context.Context, tx *gorm.DB, id int, amount float64) error {
-	err := tx.Model(&models.User{}).Where("id = ?", id).Update("saldo", gorm.Expr("saldo + ?", amount)).Error
+	err := tx.WithContext(ctx).Model(&models.User{}).Where("id = ?", id).Update("saldo", gorm.Expr("saldo + ?", amount)).Error
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (p *PostgresRepo) AddSaldo(ctx context.Context, tx *gorm.DB, id int, amount
 
 func (p *PostgresRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	err := p.db.Where("email = ?", email).First(&user).Error
+	err := p.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

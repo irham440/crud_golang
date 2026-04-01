@@ -7,28 +7,30 @@ import (
 	"belajar-go/utils"
 	"encoding/json"
 	"net/http"
-	"strconv"
+	"github.com/go-playground/validator/v10"
 )
 
 type UserController struct {
-	service *services.UserService
+	service services.UserService
 }
 
-func NewUserController(service *services.UserService) *UserController {
+func NewUserController(service services.UserService) *UserController {
 	return &UserController{service: service}
 }
+
+var validate = validator.New()
 
 func (s *UserController) FindByIdHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		utils.Error(w, http.StatusBadRequest, "invalid ID")
+	userId, ok := ctx.Value("user_id").(int)
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	user, err := s.service.GetProfile(ctx, id)
+	user, err := s.service.GetProfile(ctx, userId)
+
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, err.Error())
 		return
@@ -39,11 +41,16 @@ func (s *UserController) FindByIdHandler(w http.ResponseWriter, r *http.Request)
 
 func (s *UserController) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
 	var InputUser dto.CreateUserRequest
 	err := json.NewDecoder(r.Body).Decode(&InputUser)
 	if err != nil {
 		utils.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	err = validate.Struct(InputUser)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -71,18 +78,23 @@ func (s *UserController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.service.Login(ctx, InputLogin.Email, InputLogin.Password)
+	token, err := s.service.Login(ctx, InputLogin.Email, InputLogin.Password)
 	if err != nil {
-		utils.Error(w, http.StatusUnauthorized, "invalid email or password")
+		utils.Error(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	utils.Success(w, http.StatusOK, "login successful", nil)
+	utils.Success(w, http.StatusOK, "login successful", map[string]interface{}{"token": token})
 }
 
 func (s *UserController) TopUpHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	userId,ok := ctx.Value("user_id").(int)
+	if !ok {
+		utils.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 	var InputTopUp dto.TopUpSaldoRequest
 	err := json.NewDecoder(r.Body).Decode(&InputTopUp)
 	if err != nil {
@@ -95,7 +107,7 @@ func (s *UserController) TopUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.service.TopUpSaldo(ctx, InputTopUp.Id, InputTopUp.Amount)
+	err = s.service.TopUpSaldo(ctx, userId, InputTopUp.Amount)
 	if err != nil {
 		utils.Error(w, http.StatusBadRequest, err.Error())
 		return
