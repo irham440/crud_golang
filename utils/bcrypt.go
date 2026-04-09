@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"os"
 	"strconv"
-	"golang.org/x/crypto/bcrypt"
-	"errors"
 )
 
 func GeneratePassword(password string) (string, error) {

@@ -5,8 +5,8 @@ import (
 	"belajar-go/utils"
 	"context"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -15,7 +15,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		
 		next.ServeHTTP(w, r)
 
 		logger.Log.Info("Inbound Request",
@@ -26,7 +25,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		)
 	})
 }
-
 
 func RecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +41,6 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-
 func TokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
@@ -53,13 +50,14 @@ func TokenMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		userId, err := utils.ValidateJWT(token)
+		userId, email, err := utils.ValidateJWT(token)
 		if err != nil {
 			http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
-	
+
 		ctx := context.WithValue(r.Context(), "user_id", userId)
+		ctx = context.WithValue(r.Context(), "email", email)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
